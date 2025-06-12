@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель администратора</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Контейнер для формы входа/регистрации -->
+    <div id="auth-container" class="active">
+        <div id="email-step" class="step active">
+            <h1>Вход в панель</h1>
+            <h2>Введите email, допущенный к работе с системой.</h2>
+            <div class="input-wrapper">
+                <input type="email" id="email-input" placeholder="Электронная почта" autocomplete="email">
+                <span class="material-icons-outlined next-icon" id="check-email-btn">arrow_forward</span>
+            </div>
+            <p id="email-error" class="error-message"></p>
+        </div>
+        <div id="login-step" class="step">
+            <h1>Введите пароль</h1>
+            <h2 id="login-greeting">С возвращением! Введите ваш пароль для входа.</h2>
+            <div class="input-wrapper">
+                <input type="password" id="login-password-input" placeholder="Пароль" autocomplete="current-password">
+                <span class="material-icons-outlined next-icon" id="login-btn">arrow_forward</span>
+            </div>
+            <p id="login-error" class="error-message"></p>
+        </div>
+        <div id="register-step-1" class="step">
+            <h1>Создайте пароль</h1>
+            <h2>Задайте пароль для новой учетной записи.</h2>
+            <div class="input-wrapper">
+                <input type="password" id="register-password-input" placeholder="Новый пароль" autocomplete="new-password">
+                <span class="material-icons-outlined next-icon" id="set-password-btn">arrow_forward</span>
+            </div>
+            <p id="register-error" class="error-message"></p>
+            <ul id="password-rules">
+                <li id="rule-length">Минимум 8 символов</li>
+                <li id="rule-case">Большая и маленькая буква</li>
+                <li id="rule-digit">Одна цифра</li>
+                <li id="rule-special">Один спецсимвол (!@#$%)</li>
+            </ul>
+        </div>
+        <div id="register-step-2" class="step">
+            <h1>Подтвердите пароль</h1>
+            <h2>Введите пароль еще раз, чтобы избежать ошибок.</h2>
+            <div class="input-wrapper">
+                <input type="password" id="confirm-password-input" placeholder="Подтвердите пароль" autocomplete="new-password">
+                <span class="material-icons-outlined next-icon" id="confirm-password-btn">arrow_forward</span>
+            </div>
+            <p id="confirm-error" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- Контейнер для панели администратора (изначально скрыт) -->
+    <div id="admin-panel-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Панель управления</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="files">
+                    <span class="material-icons-outlined">folder</span>
+                    <span>Файлы</span>
+                </a>
+                <a href="#" class="nav-item" data-page="users">
+                    <span class="material-icons-outlined">group</span>
+                    <span>Пользователи</span>
+                </a>
+                <a href="#" class="nav-item" data-page="banned">
+                    <span class="material-icons-outlined">block</span>
+                    <span>Заблокированные</span>
+                </a>
+                <a href="#" class="nav-item" data-page="db">
+                    <span class="material-icons-outlined">storage</span>
+                    <span>База данных</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="nav-item">
+                    <span class="material-icons-outlined">logout</span>
+                    <span>Выход</span>
+                </a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div id="page-files" class="page active">
+                <header class="page-header">
+                    <h1>Файлы</h1>
+                    <p>Здесь вы можете загружать, скачивать и управлять файлами.</p>
+                </header>
+                <div class="file-manager">
+                    <div class="upload-section">
+                        <input type="file" id="file-input" hidden>
+                        <button id="upload-btn">
+                            <span class="material-icons-outlined">upload_file</span>
+                            Загрузить файл
+                        </button>
+                        <p id="upload-status"></p>
+                    </div>
+                    <div id="file-list-container">
+                        <h2>Загруженные файлы</h2>
+                        <ul id="file-list">
+                            <!-- Список файлов будет здесь -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="page-users" class="page">
+                <div class="coming-soon">
+                    <span class="material-icons-outlined">group</span>
+                    <h1>Раздел "Пользователи"</h1>
+                    <p>Эта функция скоро появится.</p>
+                </div>
+            </div>
+            <div id="page-banned" class="page">
+                <div class="coming-soon">
+                    <span class="material-icons-outlined">block</span>
+                    <h1>Раздел "Заблокированные"</h1>
+                    <p>Эта функция скоро появится.</p>
+                </div>
+            </div>
+            <div id="page-db" class="page">
+                 <div class="coming-soon">
+                    <span class="material-icons-outlined">storage</span>
+                    <h1>Раздел "База данных"</h1>
+                    <p>Эта функция скоро появится.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
