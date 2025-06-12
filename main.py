@@ -9,16 +9,22 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-# --- Настройка путей и конфигурации ---
+# --- Настройка путей и конфигурации для одной директории ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'frontend'))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+# Flask будет искать статические файлы (css, js) и index.html в той же папке
+app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
+
+# ВАЖНО: На Render.com обязательно установите переменную окружения SECRET_KEY
+# Этот резервный ключ используется только для локальной разработки!
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-very-strong-secret-key-that-you-must-change')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Белый список email. Только эти адреса могут регистрироваться и входить.
 ALLOWED_EMAILS = ["vladgor2507@mail.ru", "lochakov1990@gmail.com"]
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 USERS_FILE = os.path.join(BASE_DIR, 'users.json')
@@ -59,7 +65,7 @@ def token_required(f):
 
 # --- Эндпоинты ---
 @app.route('/')
-def serve_index(): return app.send_static_file('index.html')
+def serve_index(): return send_from_directory(app.static_folder, 'index.html')
 
 def create_token(email):
     return jwt.encode({
@@ -112,9 +118,9 @@ def get_file_details(folder, filename):
 @token_required
 def list_files(current_user_email):
     try:
-        files_with_details = [get_file_details(UPLOAD_FOLDER, f)
-                              for f in os.listdir(UPLOAD_FOLDER)
-                              if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
+        files_with_details = [get_file_details(app.config['UPLOAD_FOLDER'], f)
+                              for f in os.listdir(app.config['UPLOAD_FOLDER'])
+                              if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER'], f))]
         files_with_details.sort(key=lambda x: x['modified_date'], reverse=True)
         return jsonify(files_with_details), 200
     except Exception as e:
@@ -127,13 +133,13 @@ def upload_file(current_user_email):
     file = request.files['file']
     if file.filename == '': return jsonify({'error': 'Файл не выбран'}), 400
     filename = secure_filename(file.filename)
-    file.save(os.path.join(UPLOAD_FOLDER, filename))
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return jsonify({'message': f'Файл {filename} успешно загружен'}), 201
 
 @app.route('/api/download/<path:filename>')
 @token_required
 def download_file(current_user_email, filename):
-    return send_from_directory(UPLOAD_FOLDER, secure_filename(filename), as_attachment=True)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], secure_filename(filename), as_attachment=True)
 
 @app.route('/api/rename/<path:filename>', methods=['PUT'])
 @token_required
@@ -141,8 +147,8 @@ def rename_file(current_user_email, filename):
     data = request.get_json()
     new_filename = data.get('newName')
     if not new_filename: return jsonify({'error': 'Новое имя файла не предоставлено'}), 400
-    old_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
-    new_path = os.path.join(UPLOAD_FOLDER, secure_filename(new_filename))
+    old_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
+    new_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(new_filename))
     if not os.path.exists(old_path): return jsonify({'error': 'Исходный файл не найден'}), 404
     if os.path.exists(new_path): return jsonify({'error': 'Файл с таким именем уже существует'}), 409
     try:
@@ -153,11 +159,16 @@ def rename_file(current_user_email, filename):
 @app.route('/api/files/<path:filename>', methods=['DELETE'])
 @token_required
 def delete_file(current_user_email, filename):
-    file_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
     if os.path.exists(file_path):
         os.remove(file_path)
         return jsonify({'message': f'Файл {filename} удален'}), 200
     return jsonify({'error': 'Файл не найден'}), 404
+
+# Эта часть нужна, чтобы Flask мог обслуживать и другие статические файлы (css, js)
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(app.static_folder, filename)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
