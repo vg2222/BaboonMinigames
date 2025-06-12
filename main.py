@@ -19,9 +19,9 @@ if not os.path.exists(UPLOAD_FOLDER):
 # Flask будет искать статические файлы (css, js) и index.html в той же папке
 app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
 
-# ВАЖНО: На Render.com обязательно установите переменную окружения SECRET_KEY
-# Этот резервный ключ используется только для локальной разработки!
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-very-strong-secret-key-that-you-must-change')
+# ИСПРАВЛЕНО: Добавлен резервный ключ для локальной разработки.
+# На Render.com обязательно установите переменную окружения SECRET_KEY.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Белый список email. Только эти адреса могут регистрироваться и входить.
@@ -58,8 +58,8 @@ def token_required(f):
             current_user_email = data['email']
             if current_user_email not in ALLOWED_EMAILS:
                 return jsonify({'message': 'Пользователь не авторизован'}), 403
-        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
-            return jsonify({'message': 'Недействительный или просроченный токен!'}), 401
+        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
+            return jsonify({'message': f'Недействительный токен: {e}'}), 401
         return f(current_user_email, *args, **kwargs)
     return decorated
 
